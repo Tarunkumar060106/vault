@@ -5,6 +5,9 @@ import { createAdminClient, createSessionClient } from "../appwrite";
 import { appwriteConfig } from "../appwrite/config";
 import { parseStringify } from "../utils";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { avatarPlaceholderUrl } from "@/constants";
+import { send } from "process";
 import { parse } from "path";
 
 const getUserByEmail = async (email: string) => {
@@ -66,8 +69,7 @@ export const createAccount = async ({
         {
           fullName,
           email,
-          avatar:
-            "https://imgs.search.brave.com/abkapSUByvjrrYYoLh2trkZvVMg8i2h4UGc3kDhOfG4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTQ5/NTA4ODA0My9mci92/ZWN0b3JpZWwvaWMl/QzMlQjRuZS1kZS1w/cm9maWwtdXRpbGlz/YXRldXItYXZhdGFy/LW91LWljJUMzJUI0/bmUtZGUtcGVyc29u/bmUtcGhvdG8tZGUt/cHJvZmlsLXN5bWJv/bGUtcG9ydHJhaXQu/anBnP3M9NjEyeDYx/MiZ3PTAmaz0yMCZj/PW1vTlJaall0VnBI/LUkwbUFlLVpmalZr/dXdnQ09xSC1CUlhG/TGhRa1pvUDg9",
+          avatar: avatarPlaceholderUrl,
           accountId,
         }
       );
@@ -117,4 +119,29 @@ export const getCurrentUser = async () => {
   );
   if (user.total <= 0) return null;
   return parseStringify(user.documents[0]);
+};
+
+export const signOutUser = async () => {
+  const { account } = await createSessionClient();
+  try {
+    await account.deleteSession("current");
+    (await cookies()).delete("appwrite-session");
+  } catch (error) {
+    handleError(error, "Failed to sign out user");
+  } finally {
+    redirect("/sign-in");
+  }
+};
+
+export const signInUser = async ({ email }: { email: string }) => {
+  try {
+    const existingUser = await getUserByEmail(email);
+
+    if (existingUser) {
+      await sendEmailOTP({ email });
+      return parseStringify({ accountId: existingUser.accountId });
+    }
+
+    return parseStringify({ accountId: null, error: "User not found" });
+  } catch (error) {}
 };
