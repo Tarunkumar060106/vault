@@ -11,6 +11,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Vault",
   description: "The only storage platform you will ever need",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
