@@ -7,8 +7,6 @@ import { parseStringify } from "../utils";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { avatarPlaceholderUrl } from "@/constants";
-import { send } from "process";
-import { parse } from "path";
 
 const getUserByEmail = async (email: string) => {
   const { databases } = await createAdminClient();
