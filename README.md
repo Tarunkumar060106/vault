@@ -28,3 +28,43 @@ The app uses **Appwrite Cloud** for backend services — authentication, file st
 ---
 
 ## 🧩 Project Structure
+vault/
+┣ 📜 Containerfile
+┣ 📜 package.json
+┣ 📜 .dockerignore
+┣ 📂 public/
+┣ 📂 src/
+┗ 📜 README.md
+
+
+---
+
+## 🐳 Containerfile
+```dockerfile
+# --------------------------------------
+# Stage 1 – Builder
+# --------------------------------------
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# --------------------------------------
+# Stage 2 – Runner
+# --------------------------------------
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/next.config.* ./
+
+# Environment variable placeholder (real values passed at runtime)
+ENV NEXT_PUBLIC_APPWRITE_ENDPOINT_URL=https://fra.cloud.appwrite.io/v1
+
+EXPOSE 3000
+CMD ["npm", "start"]
+
